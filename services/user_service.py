@@ -23,6 +23,8 @@ class UserService:
         return [{"id": user.id, "name": user.name, "mobile": user.mobile} for user in users]
 
     def get_user_by_username(self, name: str) -> dict:
+        print(1)
+        exit()
         user = self.db.query(User).filter(User.name == name).first()
         if user:
             return {"id": user.id, "mibile": user.mibile, "name": user.name}

@@ -1,18 +1,21 @@
 from sqlalchemy.orm import Session
 from models.user import User
 from pydantic import BaseModel
-from typing import List
+from typing import List,Optional
 
 class UserCreate(BaseModel):
     name: str
     mobile: str
+    org_id: Optional[int] = 0
 
 class UserService:
     def __init__(self, db: Session):
         self.db = db
 
     def create_user(self, user: UserCreate) -> dict:
-        db_user = User(name=user.name, email=user.mobile)
+        print(f"{user}")
+        db_user = User(name=user.name, mobile=user.mobile,org_id=user.org_id)
+        print(f"{db_user}")
         self.db.add(db_user)
         self.db.commit()
         self.db.refresh(db_user)
@@ -23,9 +26,8 @@ class UserService:
         return [{"id": user.id, "name": user.name, "mobile": user.mobile} for user in users]
 
     def get_user_by_username(self, name: str) -> dict:
-        print(1)
-        exit()
+        # print(f"{name}")
         user = self.db.query(User).filter(User.name == name).first()
         if user:
-            return {"id": user.id, "mibile": user.mibile, "name": user.name}
+            return {"id": user.id, "mobile": user.mobile, "name": user.name}
         return {"message": f"用户 {name} 不存在"}

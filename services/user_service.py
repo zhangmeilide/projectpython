@@ -7,6 +7,7 @@ class UserCreate(BaseModel):
     name: str
     mobile: str
     org_id: Optional[int] = 0
+    password:str
 
 class UserService:
     def __init__(self, db: Session):
@@ -14,7 +15,7 @@ class UserService:
 
     def create_user(self, user: UserCreate) -> dict:
         print(f"{user}")
-        db_user = User(name=user.name, mobile=user.mobile,org_id=user.org_id)
+        db_user = User(name=user.name, mobile=user.mobile,org_id=user.org_id,password=user.password)
         print(f"{db_user}")
         self.db.add(db_user)
         self.db.commit()
@@ -29,5 +30,5 @@ class UserService:
         # print(f"{name}")
         user = self.db.query(User).filter(User.name == name).first()
         if user:
-            return {"id": user.id, "mobile": user.mobile, "name": user.name}
+            return {"id": user.id, "mobile": user.mobile, "name": user.name,"password":user.password}
         return {"message": f"用户 {name} 不存在"}

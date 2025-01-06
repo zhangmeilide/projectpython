@@ -7,4 +7,6 @@ class User(Base):
     name = Column(String, unique=True, index=True)
     mobile = Column(String, unique=True, index=True)
     org_id = Column(Integer,default=0)  # 可选字段
+    password = Column(String)  # 存储加密后的密码
+    real_name = Column(String)
 

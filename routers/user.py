@@ -92,7 +92,7 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(get_tok
 @router.post("/login")
 async def login(name: str, password: str, db: Session = Depends(get_db)):
     user_service = UserService(db)
-    user = user_service.get_user_by_username(name)
+    user = user_service.get_user_info(name)
     if not user or "message" in user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

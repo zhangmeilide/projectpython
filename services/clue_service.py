@@ -15,8 +15,9 @@ class ClueService:
         skip: int = 0,
         limit: int = 10
     ) -> List[dict]:
-        query = db.query(Clue).join(ClueOrg).filter(
-   ClueOrg.org_id == org_id,
+        # 构建查询
+        query = db.query(Clue, ClueOrg).join(ClueOrg).filter(
+            ClueOrg.org_id == org_id,
             ClueOrg.dept_id == dept_id
         )
         if clue_name:
@@ -24,7 +25,37 @@ class ClueService:
         if assign_status:
             query = query.filter(ClueOrg.assign_status == assign_status)
 
-        clues = query.offset(skip).limit(limit).all()
+            # 获取查询结果
+        results = query.offset(skip).limit(limit).all()
+
+        # 转换为字典列表
+        ASSIGN_STATUS_MAP = {
+            1000: "未分派（创建）",
+            1001: "上级派发（来我这的）",
+            1002: "其他部门移交（来我这的）",
+            2001: "分派下级的（给别人的）",
+            2002: "移交部门的（给别人的）",
+            3001: "下级机构-退回给我的",
+            3002: "同机构不同部门-退回给我的",
+            4001: "我退回给-上级机构",
+            4002: "我退回给-同机构其他部门的",
+            5001: "拉回来的",
+            5002: "拉走的",
+        }
+
+        clues = []
+        for clue, clue_org in results:
+            clues.append({
+                "id": clue.id,
+                "clue_name": clue.clue_name,
+                "clue_url": clue.clue_url,
+                "assign_status": clue_org.assign_status,
+                "assign_status_text": ASSIGN_STATUS_MAP.get(clue_org.assign_status, "未知状态"),
+                # 如果需要更多字段，可继续添加
+                "created_at": clue.created_at.strftime("%Y-%m-%d %H:%M:%S"),  # 格式化时间
+                "updated_at": clue.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+            })
+
         return clues
 
     def get_clues(self, filter_params:Dict[str, Union[int,Optional[str]]] ) -> dict:

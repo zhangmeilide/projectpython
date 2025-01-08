@@ -1,20 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException,Query
 from sqlalchemy.orm import Session
 from services.clue_service import ClueService
-from schemas.clue import ClueOut
+from routers.user import get_current_user
 from typing import Dict,Optional,Union
 from db import get_db
 router = APIRouter()
-@router.get("/",response_model=list[ClueOut])
+@router.get("/")
 def get_clue_list_route(
-    org_id: int,
-    dept_id: int,
     clue_name: str = None,
     assign_status: int = 0,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Dict = Depends(get_current_user)
 ):
+    org_id = current_user["org_id"]  # 假设 current_user 包含 org_id
+    dept_id = current_user["dept_id"]  # 假设 current_user 包含 dept_id
+
     skip = (page - 1) * limit
     service = ClueService()
     clues = service.get_all_clues(
@@ -26,7 +28,6 @@ def get_clue_list_route(
         skip=skip,
         limit=limit
     )
-
     return clues
 
 @router.get("/index")

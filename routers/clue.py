@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException,Query
 from sqlalchemy.orm import Session
 from services.clue_service import ClueService
 from routers.user import get_current_user
-from typing import Dict,Optional,Union
+from schemas.clue import ClueCreate,ClueUpdate
+from typing import Dict
 from db import get_db
 router = APIRouter()
 @router.get("/")
@@ -30,22 +31,24 @@ def get_clue_list_route(
     )
     return clues
 
-@router.get("/index")
-async def get_clue_index(db: Session = Depends(get_db),
-                            page: int = Query(1, ge=1, description="当前页码"),
-                            page_size: int = Query(10, ge=1, le=100, description="每页数据量"),
-                            company_name: Optional[str] = Query(None, description="公司名称用于模糊搜索"),
-                            company_address: Optional[str] = Query(None, description="公司地址用于模糊搜索"),
-                            industry: Optional[str] = Query(None, description="行业"),
-                            ):
-    # 正确的方式是先定义字典
-    filter_params: Dict[str, Union[int, Optional[str]]] = {
-        "page": page,
-        "page_size": page_size,
-        "company_name": company_name,
-        "company_address": company_address,
-        "industry": industry,
-    }
+@router.post("/")
+async def create_clue_transaction(clue: ClueCreate, db: Session = Depends(get_db)):
+    clue_service = ClueService(db)
+    return clue_service.create_clue_transaction(clue)
 
-    service = ClueService(db)
-    return service.get_clues(filter_params)
+@router.put("/{id}")
+async def update_clue(id:int, clue: ClueUpdate, db: Session = Depends(get_db)):
+    clue_service = ClueService(db)
+    return clue_service.update_clue(id,clue)
+
+@router.delete("/{id}")
+async def update_clue(id:int, db: Session = Depends(get_db)):
+    clue_service = ClueService(db)
+    return clue_service.delete_clue(id)
+
+
+
+
+
+
+

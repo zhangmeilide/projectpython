@@ -1,10 +1,13 @@
-from typing import List, Optional, Dict,Union
+from fastapi import HTTPException
+from typing import List
 from sqlalchemy.orm import Session
-from models.company import Company
 from models.clue import Clue,ClueOrg
-from schemas.clue import ClueOut
+from schemas.clue import ClueCreate,ClueUpdate
 
 class ClueService:
+    def __init__(self, db: Session):
+        self.db = db
+
     def get_all_clues(
         self,
         db: Session,
@@ -58,38 +61,167 @@ class ClueService:
 
         return clues
 
-    def get_clues(self, filter_params:Dict[str, Union[int,Optional[str]]] ) -> dict:
-        print(filter_params)
-        # 解包字典中的分页参数
-        page = filter_params.get("page", 1)
-        page_size = filter_params.get("page_size", 10)
-        # 构建查询
-        query = self.db.query(Company)
+    # 非事务创建线索
+    def create_clue(self, add_data: ClueCreate) -> dict:
+        print(f"{add_data}")
+        db_data = Clue(
+            clue_name=add_data.clue_name,
+            clue_url=add_data.clue_url,
+            company_id=add_data.company_id,
+            company_name=add_data.company_name,
+            org_id=add_data.org_id,
+            dept_id=add_data.dept_id,
+            work_source_flag=add_data.work_source_flag,
+            clue_behavior_id=add_data.clue_behavior_id,
+        )
+        self.db.add(db_data)
+        self.db.commit()
+        self.db.refresh(db_data)
 
-        # 根据查询条件动态添加过滤
-        if filter_params.get("company_name"):
-            query = query.filter(Company.company_name.like(f"%{filter_params['company_name']}%"))
-        if filter_params.get("company_address"):
-            query = query.filter(Company.company_address.like(f"%{filter_params['company_address']}%"))
-        if filter_params.get("industry"):
-            query = query.filter(Company.industry == filter_params["industry"])
+        # 2. 同时插入 tb_clue_org 数据
+        db_clue_org = ClueOrg(
+            clue_id=db_data.id,  # 外键关联
+            org_id=add_data.org_id,
+            dept_id=add_data.dept_id,
+            assign_status=1000
+        )
+        self.db.add(db_clue_org)
+        self.db.commit()
 
-        # 计算总数和分页
-        total_items = query.count()
-        total_pages = (total_items + page_size - 1) // page_size
+        return {"message": "线索和组织创建成功", "clue": db_data, "clue_org": db_clue_org}
 
-        # print(f"Executing query: {query}")
-        # 执行分页查询
-        companies = query.offset((page - 1) * page_size).limit(page_size).all() or []
-        # print(f"Found companies: {companies}")  # 查看返回的结果
+    # 创建线索-应用事务
+    def create_clue_transaction(self, add_data: ClueCreate) -> dict:
+        try:
+            # 开始事务
+            with self.db.begin():
+                db_data = Clue(
+                    clue_name=add_data.clue_name,
+                    clue_url=add_data.clue_url,
+                    company_id=add_data.company_id,
+                    company_name=add_data.company_name,
+                    org_id=add_data.org_id,
+                    dept_id=add_data.dept_id,
+                    work_source_flag=add_data.work_source_flag,
+                    clue_behavior_id=add_data.clue_behavior_id,
+                )
+                self.db.add(db_data)
+                self.db.flush()
+                # 刷新 db_clue_org 获取插入后的数据
+                self.db.refresh(db_data)
+                # 2. 同时插入 tb_clue_org 数据
+                db_clue_org = ClueOrg(
+                    clue_id=db_data.id,  # 外键关联
+                    org_id=add_data.org_id,
+                    dept_id=add_data.dept_id,
+                    assign_status=1000
+                )
+                self.db.add(db_clue_org)
+                self.db.flush()
+                self.db.refresh(db_clue_org)
+
+                self.db.commit()
+        except Exception as e:
+            self.db.rollback()  # 发生错误时回滚事务
+            raise Exception(f"创建线索：{e}")
+
+        """return {
+            "message": "线索和组织创建成功",
+            "clue": self._convert_to_dict(db_data),
+            "clue_org": self._convert_to_dict(db_clue_org)
+        }"""
+        # 返回仅包含需要的字段 上面是返回所有的字段
         return {
-            "data": [
-                self._format_company(company) for
-                company in companies],
-            "pagination": {
-                "current_page": page,
-                "page_size": page_size,
-                "total_items": total_items,
-                "total_pages": total_pages
+            "message": "线索和组织创建成功",
+            "clue": {
+                "id": db_data.id,
+                "clue_name": db_data.clue_name,
+                "clue_url": db_data.clue_url
+            },
+            "clue_org": {
+                "id": db_clue_org.id,
+                "assign_status": db_clue_org.assign_status
             }
         }
+
+    def update_clue(self, id:int,update_data: ClueUpdate) -> dict:
+        print(f"{update_data}")
+        clue = self.db.query(Clue).filter_by(id=id).first()
+        # 如果没有找到线索，抛出 404 错误
+        if not clue:
+            raise HTTPException(status_code=404, detail="Clue not found")
+        try:
+            update_dict = {}
+            if update_data.clue_name:
+                update_dict['clue_name'] = update_data.clue_name.strip()  # 去除空格
+            if update_data.clue_url:
+                update_dict['clue_url'] = update_data.clue_url
+            if update_data.company_id:
+                update_dict['company_id'] = update_data.company_id
+            if update_data.company_name is not None:
+                update_dict['company_name'] = update_data.company_name
+            if update_data.org_id:
+                update_dict['org_id'] = update_data.org_id
+            if update_data.dept_id:
+                update_dict['dept_id'] = update_data.dept_id
+            if update_data.work_source_flag:
+                update_dict['work_source_flag'] = update_data.work_source_flag
+            if update_data.clue_behavior_id is not None:
+                update_dict['clue_behavior_id'] = update_data.clue_behavior_id
+
+            # 在这里遍历字段并更新
+            for field, value in update_dict.items():
+                setattr(clue, field, value)  # 动态设置字段的值
+
+            self.db.commit()
+            return {
+                "status": 200,
+                "message": "线索更新成功",
+                "clue": {
+                    "id": clue.id,
+                    "clue_name": clue.clue_name,
+                    "clue_url": clue.clue_url,
+                    "company_id": clue.company_id,
+                    "company_name": clue.company_name,
+                    "org_id": clue.org_id,
+                    "dept_id": clue.dept_id
+                }
+            }
+
+        except Exception as e:
+            # 发生异常时回滚事务
+            self.db.rollback()
+            raise HTTPException(status_code=500, detail=f"更新线索失败: {e}")
+
+    def delete_clue(self,id)->dict:
+        clue = self.db.query(Clue).filter_by(id=id).first()
+        if not clue:
+            raise HTTPException(status_code=404, detail="线索数据不存在")
+        try:
+            self.db.delete(clue)
+            self.db.commit()
+            return {
+                "status": 200,
+                "message":"线索数据删除成功",
+                "id": clue.id
+            }
+
+        except Exception as e:
+            self.db.rollback()
+            raise HTTPException(status_code=500,detail=f"删除线索失败:{e}")
+
+
+    def _convert_to_dict(self, obj):
+        """辅助函数，用于将 SQLAlchemy 对象转换为字典"""
+        return {column.name: getattr(obj, column.name) for column in obj.__table__.columns}
+
+
+
+
+
+
+
+
+
+
+

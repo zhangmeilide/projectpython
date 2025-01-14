@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from db import SessionLocal
 from services.user_service import UserService, UserCreate
 from models.user import User
+from utils.background import log_dependency
 
 # 配置
 SECRET_KEY = "your_secret_key"
@@ -90,7 +91,7 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(get_tok
 
 # 登录接口
 @router.post("/login")
-async def login(name: str, password: str, db: Session = Depends(get_db)):
+async def login(name: str, password: str,log_message:str="", db: Session = Depends(get_db),_:str = Depends(log_dependency)):
     user_service = UserService(db)
     user = user_service.get_user_info(name)
     if not user or "message" in user:

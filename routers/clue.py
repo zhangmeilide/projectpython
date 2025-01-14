@@ -19,7 +19,7 @@ def get_clue_list_route(
     dept_id = current_user["dept_id"]  # 假设 current_user 包含 dept_id
 
     skip = (page - 1) * limit
-    service = ClueService()
+    service = ClueService(db)
     clues = service.get_all_clues(
         db=db,
         org_id=org_id,
@@ -42,7 +42,7 @@ async def update_clue(id:int, clue: ClueUpdate, db: Session = Depends(get_db)):
     return clue_service.update_clue(id,clue)
 
 @router.delete("/{id}")
-async def update_clue(id:int, db: Session = Depends(get_db)):
+async def delete_clue(id:int, db: Session = Depends(get_db)):
     clue_service = ClueService(db)
     return clue_service.delete_clue(id)
 

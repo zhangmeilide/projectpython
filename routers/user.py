@@ -92,6 +92,7 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(get_tok
 # 登录接口
 @router.post("/login")
 async def login(name: str, password: str,log_message:str="", db: Session = Depends(get_db),_:str = Depends(log_dependency)):
+    print('777')
     user_service = UserService(db)
     user = user_service.get_user_info(name)
     if not user or "message" in user:

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from db import engine
-from routers import user,company,clue,file_router
+from routers import user,company,clue,file_router,shop
 
 # 导入模型，确保数据库表被创建
 from models import user as user_model
@@ -14,6 +14,7 @@ app.include_router(company.router, prefix="/companys", tags=["Companys"])
 app.include_router(clue.router, prefix="/clues", tags=["Clues"])
 # 注册文件路由
 app.include_router(file_router.router, prefix="/files", tags=["文件管理"])
+app.include_router(shop.router, prefix="/shops", tags=["店铺管理"])
 
 @app.get("/")
 async def root():

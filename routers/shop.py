@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException,Query
 from sqlalchemy.orm import Session
 from services.shop_service import ShopService
 from routers.user import get_current_user
-from schemas.clue import ClueCreate,ClueUpdate
+from schemas.shop import ShopCreate
 from typing import Dict
 from db import get_db
 router = APIRouter()
@@ -27,7 +27,14 @@ def get_shop_list_route(
     return result
 
 
-
+@router.post("/")
+async def create_shop(
+        shop: ShopCreate,
+        db: Session = Depends(get_db),
+        current_user: Dict = Depends(get_current_user)
+):
+    service = ShopService(db)
+    return service.create_shop(shop,current_user)
 
 
 

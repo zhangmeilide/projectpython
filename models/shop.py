@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, Text, TIMESTAMP, SmallInteger
+from sqlalchemy import Column, Integer, String, Float, Text, TIMESTAMP, SmallInteger,DateTime
 from db import Base
+from datetime import datetime
 
 class Shop(Base):
     __tablename__ = 'tb_shop'
@@ -50,9 +51,9 @@ class Shop(Base):
     data_source = Column(SmallInteger, default=1, nullable=False, comment='数据来源 1：系统 2：手动创建 3:机构')
     patrol_time = Column(TIMESTAMP, nullable=True, comment='巡查最近时间')
     order_index = Column(Integer, default=3, nullable=False, comment='排序')
-    created_at = Column(TIMESTAMP, nullable=True, comment='创建时间')
-    updated_at = Column(TIMESTAMP, nullable=True, comment='修改时间')
-    deleted_at = Column(TIMESTAMP, nullable=True, comment='删除时间')
+    created_at = Column(DateTime, default=datetime.utcnow)  # 默认当前时间
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # 默认当前时间，更新时自动更新
+    deleted_at = Column(TIMESTAMP, nullable=True, comment='删除时间')  # 新增字段
     user_id = Column(Integer, default=0, nullable=False, comment='创建人id')
     company_id_old = Column(Integer, nullable=True, comment='主库company_id')
     judge_num = Column(SmallInteger, default=0, nullable=False, comment='巡查次数')

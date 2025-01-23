@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException,Query
 from sqlalchemy.orm import Session
+from services.org_service import OrgService  # µº»Î OrgService
 from services.shop_service import ShopService
 from routers.user import get_current_user
 from schemas.shop import ShopCreate
@@ -35,6 +36,5 @@ async def create_shop(
 ):
     service = ShopService(db)
     return service.create_shop(shop,current_user)
-
 
 

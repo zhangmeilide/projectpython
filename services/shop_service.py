@@ -1,17 +1,16 @@
-from fastapi import HTTPException
+from fastapi import HTTPException,Depends
 from typing import List
 from sqlalchemy.orm import Session
-
+from services.org_service import OrgService
 from models.org import Org
 from models.shop import Shop
 from schemas.clue import ClueCreate,ClueUpdate
 from schemas.shop import ShopCreate
 from datetime import datetime
-
+from utils.utils import get_org_info
 class ShopService:
     def __init__(self, db: Session):
         self.db = db
-
     def get_all_shops(
         self,
         db: Session,
@@ -47,7 +46,7 @@ class ShopService:
 
     def create_shop(self,shop: ShopCreate,current_user:dict) -> dict:
         org_id = current_user['org_id']
-        org_info = self.get_org_info(org_id)
+        org_info = get_org_info(self.db,org_id)  # Use injected OrgService
         db_data = Shop(
             shop_name=shop.shop_name,
             shop_url=shop.shop_url,
@@ -61,7 +60,7 @@ class ShopService:
         self.db.add(db_data)
         self.db.commit()
         self.db.refresh(db_data)
-        return {"status":200,"message": "店铺创建成功", "shop": db_data}
+        return {"status":200,"message": "店铺创建成功","data":db_data}
 
     def get_org_info(self,org_id)->dict:
         org_info = self.db.query(Org).filter(Org.deleted_at.is_(None),Org.id == org_id).first()

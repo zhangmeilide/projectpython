@@ -1,0 +1,41 @@
+﻿# Python �����ļ���Ŀ¼
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python ���⻷��
+venv/
+env/
+.venv/
+
+# ��־�ļ�
+*.log
+
+# IDE �����ļ�
+.vscode/
+.idea/
+
+# ����Ŀ¼
+node_modules/  # �����ǰ�˲���
+dist/
+build/
+
+# ���������ļ�
+.env
+.env.local
+
+# ���ݿ��ļ�
+*.db
+*.sqlite3
+
+# �������
+.coverage
+htmlcov/
+
+# ����ļ�
+*.egg-info/
+*.egg
+*.whl
+
+# ����
+.DS_Store  # macOS ϵͳ�ļ�

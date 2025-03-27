@@ -1,5 +1,6 @@
 from fastapi import HTTPException,Depends
 from typing import List
+from sqlalchemy import Null
 from sqlalchemy.orm import Session
 from services.org_service import OrgService
 from models.org import Org
@@ -8,17 +9,17 @@ from schemas.clue import ClueCreate,ClueUpdate
 from schemas.shop import ShopCreate
 from datetime import datetime
 from utils.utils import get_org_info
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+from models.shop import Shop
+from schemas.shop import ShopCreate, ShopUpdate
+from typing import Dict
+
 class ShopService:
     def __init__(self, db: Session):
         self.db = db
-    def get_all_shops(
-        self,
-        db: Session,
-        org_id: int,
-        shop_name: str = None,
-        skip: int = 0,
-        limit: int = 10
-    ) -> List[dict]:
+
+    def get_all_shops(self, db: Session, org_id: int, shop_name: str | None = None, skip: int = 0, limit: int = 10):
         # 构建查询
         query = db.query(Shop).filter(Shop.deleted_at.is_(None))  # 过滤掉已删除的数据
         if shop_name:
@@ -43,6 +44,23 @@ class ShopService:
             'total': total,
             'data': res
         }
+
+    def get_export_shops(self, db: Session, org_id: int, platform_name: str = "", shop_name: str = "", link_man: str = "", skip: int = 0, limit: int = 10):
+        query = db.query(Shop)
+        org_info = get_org_info(self.db,org_id)  # Use injected OrgService
+        if org_info['province_id']:
+            query = query.filter(Shop.province_id == org_info['province_id'])
+        if org_info['city_id']:
+            query = query.filter(Shop.city_id == org_info['city_id'])
+        if org_info['county_id']:
+            query = query.filter(Shop.county_id == org_info['county_id'])
+        if platform_name:
+            query = query.filter(Shop.platform_name.contains(platform_name))
+        if shop_name:
+            query = query.filter(Shop.shop_name.contains(shop_name))
+        if link_man:
+            query = query.filter(Shop.link_man.contains(link_man))
+        return query.offset(skip).limit(limit).all()
 
     def create_shop(self,shop: ShopCreate,current_user:dict) -> dict:
         org_id = current_user['org_id']
@@ -73,14 +91,16 @@ class ShopService:
             "street_id": org_info.street_id
         }
 
-    def delete_shop(self, shop_id: int) -> dict:
+    def delete_shop_bak(self, shop_id: int) -> dict:
         # 查询要删除的店铺
         shop = self.db.query(Shop).filter(Shop.id == shop_id, Shop.deleted_at.is_(None)).first()
         if not shop:
             return {"status": 404, "message": "店铺不存在或已被删除"}
 
         # 设置 deleted_at 为当前时间
-        shop.deleted_at = datetime.utcnow()
+        # Bug修复: 为类“Shop”的属性“deleted_at”赋值时，需要赋值为datetime类型的值
+        # Bug修复: 使用datetime.now()代替func.now()来为deleted_at赋值
+        shop.deleted_at = datetime.now() # type: ignore
         self.db.commit()
         self.db.refresh(shop)
 
@@ -93,11 +113,34 @@ class ShopService:
             return {"status": 404, "message": "店铺不存在或未被删除"}
 
         # 恢复数据
-        shop.deleted_at = None
+        # Bug修复: 将 shop.deleted_at 的值设置为 None，而不是 Null
+        shop.deleted_at = None  # type: ignore
         self.db.commit()
         self.db.refresh(shop)
 
         return {"status": 200, "message": "店铺恢复成功", "shop": shop}
+
+    def update_shop(self, shop_id: int, shop: ShopUpdate, current_user: Dict):
+        db_shop = self.db.query(Shop).filter(Shop.id == shop_id).first()
+        if not db_shop:
+            return None
+        for var, value in vars(shop).items():
+            if value is not None:
+                setattr(db_shop, var, value)
+        self.db.commit()
+        self.db.refresh(db_shop)
+        return db_shop
+
+    def delete_shop(self, shop_id: int, current_user: Dict):
+        db_shop = self.db.query(Shop).filter(Shop.id == shop_id).first()
+        if not db_shop:
+            return False
+       # self.db.delete(db_shop)
+       # self.db.commit()
+        db_shop.deleted_at = None  # type: ignore
+        self.db.commit()
+        self.db.refresh(db_shop)
+        return True
 
 
 

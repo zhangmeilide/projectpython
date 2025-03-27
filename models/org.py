@@ -43,5 +43,4 @@ class Org(Base):
     gxdw_sjcode = Column(Integer, nullable=False, server_default="0", comment="管辖单位上级code")
     regorg_code = Column(Integer, nullable=False, server_default="0", comment="登记机关code")
     tsa_mobile_open_flag = Column(Boolean, nullable=False, server_default="1", comment="开通手机取证状态1：默认未开通 2：开通")
-    organization_type = Column(Integer, nullable=False, server_default="0", comment="组织类型  1 单位 2部门 3岗位 4人员")
-    custom_dept = Column(String(100), nullable=False, server_default="", comment="自定义所属部门")
+  

@@ -8,6 +8,8 @@ from db import SessionLocal
 from services.user_service import UserService, UserCreate
 from models.user import User
 from utils.background import log_dependency
+from typing import Optional
+from datetime import timedelta
 
 # 配置
 SECRET_KEY = "your_secret_key"
@@ -31,7 +33,7 @@ def get_db():
 def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
 
-def create_access_token(data: dict, expires_delta: timedelta = None):
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -77,7 +79,8 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(get_tok
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
+        # 原代码 `payload.get("sub")` 可能返回 None，为了避免类型不匹配问题，使用默认值空字符串
+        username: str = payload.get("sub", "")
         if username is None:
             raise credentials_exception
     except JWTError:

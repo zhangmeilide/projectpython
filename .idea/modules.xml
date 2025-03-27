@@ -2,7 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../dify/.idea/dify.iml" filepath="$PROJECT_DIR$/../dify/.idea/dify.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../dockprooject/.idea/dockprooject.iml" filepath="$PROJECT_DIR$/../dockprooject/.idea/dockprooject.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/fastapiwjxt.iml" filepath="$PROJECT_DIR$/.idea/fastapiwjxt.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../wjxtzmlsx/pythonpro/.idea/pythonpro.iml" filepath="$PROJECT_DIR$/../wjxtzmlsx/pythonpro/.idea/pythonpro.iml" />
     </modules>
   </component>
 </project>

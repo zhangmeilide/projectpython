@@ -5,7 +5,9 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 # 数据库 URL（假设使用 MySQL）
-DATABASE_URL = "mysql://root:yhblsqtxswl2021@121.89.172.70/wjxt_sx"  # 替换为你自己的 MySQL 配置信息
+#DATABASE_URL = "mysql://root:yhblsqtxswl2021@121.89.172.70/wjxt_sx"  # 替换为你自己的 MySQL 配置信息
+# 数据库 URL（假设使用 PyMySQL 作为驱动）
+DATABASE_URL = "mysql+pymysql://root:yhblsqtxswl2021@121.89.172.70/wjxt_sx"  # 替换为你自己的 MySQL
 
 # 创建数据库引擎
 engine = create_engine(DATABASE_URL, echo=True)

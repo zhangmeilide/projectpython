@@ -15,7 +15,7 @@ class DeptService:
     def create_dept(self, dept: DeptCreate, current_user):
         org_id = current_user["org_id"]
         # 排除 dept.dict() 中的 org_id 字段
-        new_dept = Dept(**dept.dict(exclude={"org_id"}), org_id=org_id)
+        new_dept = Dept(**dept.model_dump(exclude={"org_id"}), org_id=org_id)
         self.db.add(new_dept)
         self.db.commit()
         self.db.refresh(new_dept)
@@ -25,7 +25,7 @@ class DeptService:
         org_id = current_user["org_id"]
         db_dept = self.db.query(Dept).filter(Dept.id == dept_id, Dept.org_id == org_id).first()
         if db_dept:
-            for key, value in dept.dict(exclude_unset=True).items():
+            for key, value in dept.model_dump(exclude_unset=True).items():
                 setattr(db_dept, key, value)
             self.db.commit()
             self.db.refresh(db_dept)

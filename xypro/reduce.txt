@@ -1,0 +1,60 @@
+10:180:138:37:8083
+
+
+curl -X POST \
+>   http://localhost:8083/encrypt \
+>   -H "Content-Type: application/json" \
+>   -d '{"text": "你要加密的文本"}'
+{"status":200,"message":"加密成功","encrypted_str":"YQBoNJTDT6WxK3TljhusptGJ+slEwrk4n0a9Skm8rNqi2rVb4BHDrGBR8Iu33fvl"}
+
+
+  curl -X POST \
+  http://localhost:8083/decrypt \
+  -H "Content-Type: application/json" \
+  -d '{"ciphertext": "YQBoNJTDT6WxK3TljhusptGJ+slEwrk4n0a9Skm8rNqi2rVb4BHDrGBR8Iu33fvl"}'
+{"status":200,"message":"解密成功","decrypted_str":"你要加密的文本"}[
+
+
+
+
+ curl -X POST \
+>   http://10.180.26.42:9083/api/v1/ukey/random \
+>   -H "Content-Type: application/json" \
+>   -d '{"length": 16}'
+{"status":200,"message":"获取随机数成功","randomB":"GEgQECAFjX/TvmKflq61Aw=="}
+
+
+ curl -X POST \
+>   http://localhost:9083/api/v1/ukey/random \
+>   -H "Content-Type: application/json" \
+>   -d '{"length": 16}'
+
+ curl -X POST \
+>   http://localhost:8083/random \
+>   -H "Content-Type: application/json" \
+>   -d '{"length": 16}'
+{"status":200,"message":"获取随机数成功","randomB":"GEgQECAFjX/TvmKflq61Aw=="}
+
+
+curl -X POST \
+  http://localhost:8083/verify-external \
+  -H "Content-Type: application/json" \
+  -d '{
+    "public_cert": "-----BEGIN CERTIFICATE-----...",
+    "in_data": "原始数据字符串或Base64",
+    "signature": "签名字符串或Base64"
+  }'
+
+
+ curl -X POST http://localhost:8083/random -H "Content-Type: application/json" -d '{"length": 16}'
+
+
+curl -X POST http://10.180.138.37:8083/random -H "Content-Type: application/json" -d '{"length": 16}'
+
+
+curl -X POST http://111.177.63.95:9088/random -H "Content-Type: application/json" -d '{"length": 16}'
+
+这是42服务器
+http://111.177.63.95:9088/api/v1/ukey/random
+
+http://111.177.63.95:9088/api/v1/ukey/random

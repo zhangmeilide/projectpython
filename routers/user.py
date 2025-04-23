@@ -10,6 +10,7 @@ from models.user import User
 from utils.background import log_dependency
 from typing import Optional
 from datetime import timedelta
+from models.org import Org
 
 # 配置
 SECRET_KEY = "your_secret_key"
@@ -87,17 +88,32 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(get_tok
         raise credentials_exception
     user_service = UserService(db)
     user = user_service.get_user_by_username(username)
+
     if not user or "message" in user:
         raise credentials_exception
+    # 默认组织字段
+    user.setdefault('province_id', 0)
+    user.setdefault('city_id', 0)
+    user.setdefault('county_id', 0)
+    user.setdefault('org_name', '')
+
+    org_id = user.get("org_id")
+    if org_id:
+        org = db.query(Org).filter(Org.id == org_id).first()
+        if org:
+            user['province_id'] = org.province_id or 0
+            user['city_id'] = org.city_id or 0
+            user['county_id'] = org.county_id or 0
+            user['org_name'] = org.org_name or ""
     return user
 
 
 # 登录接口
 @router.post("/login")
-async def login(name: str, password: str,log_message:str="", db: Session = Depends(get_db),_:str = Depends(log_dependency)):
+async def login(mobile: str, password: str,log_message:str="", db: Session = Depends(get_db),_:str = Depends(log_dependency)):
     print('777')
     user_service = UserService(db)
-    user = user_service.get_user_info(name)
+    user = user_service.get_user_info(mobile)
     if not user or "message" in user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -111,7 +127,7 @@ async def login(name: str, password: str,log_message:str="", db: Session = Depen
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": name}, expires_delta=access_token_expires)
+    access_token = create_access_token(data={"sub": mobile}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 # 注册用户

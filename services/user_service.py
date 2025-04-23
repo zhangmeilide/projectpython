@@ -26,15 +26,15 @@ class UserService:
         users = self.db.query(User).all()
         return [{"id": user.id, "name": user.name, "mobile": user.mobile} for user in users]
 
-    def get_user_info(self, name: str) -> dict:
+    def get_user_info(self, mobile: str) -> dict:
         # print(f"{name}")
-        user = self.db.query(User).filter(User.name == name).first()
+        user = self.db.query(User).filter(User.mobile == mobile).first()
         if user:
             return {"id": user.id, "mobile": user.mobile, "name": user.name,"password":user.password}
-        return {"message": f"用户 {name} 不存在"}
+        return {"message": f"用户 {mobile} 不存在"}
 
     def get_user_by_username(self, name: str) -> dict:
-        user = self.db.query(User).filter(User.name == name).first()
+        user = self.db.query(User).filter(User.mobile == name).first()
         if user:
             # 提取返回的字段，换行写更易读
             user_data = {

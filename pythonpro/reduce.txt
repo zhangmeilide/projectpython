@@ -1,0 +1,15 @@
+达梦技术文档：https://eco.dameng.com/document/dm/zh-cn/app-dev/python-python.html
+
+一、这条命令每天凌晨 2 点自动执行 dmdatasync.py 脚本，并将日志写入到 dmdatasync.log 中，包括错误信息（下面是crontab
+命令）。
+0 2 * * * /usr/local/bin/python3.10  /data/www/wjxt_one/pythonpro/dmdatasync.py  >>  /data/www/wjxt_one/pythonpro/dmdatasync.log 2>&1
+
+
+二、`dmdatasync.py` 文件主要用于实现不同数据库之间的数据同步功能，具体如下：
+    1. **数据库连接**：支持连接达梦数据库（`dmPython`）和 PostgreSQL 数据库（`psycopg2`），并可切换达梦数据库的模式。
+    2. **数据操作**：提供了查询、插入、更新、删除数据以及关闭数据库连接等操作函数，支持将查询结果转换为 JSON 格式。
+    3. **数据同步**：包含多个测试函数和主函数，实现从 PostgreSQL 数据库的 `TODO_TASK_XZ` 和 `TASK_USER_RELATION_XZ` 
+        表向达梦数据库的 `TODO_TASK` 和 `TASK_USER_RELATION` 表同步数据，并更新同步标识。 
+    4. **异常处理**：在数据库操作和数据同步过程中对异常进行捕获和处理，保证事务的一致性。 
+
+
